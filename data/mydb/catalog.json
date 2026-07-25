@@ -1,0 +1,14 @@
+{
+  "tables": [
+    {
+      "id": 1,
+      "name": "users",
+      "heapFile": "data/mydb/users.dat",
+      "columns": [
+        {"name": "id", "type": "INTEGER", "position": 0},
+        {"name": "name", "type": "TEXT", "position": 1},
+        {"name": "age", "type": "INTEGER", "position": 2}
+      ]
+    }
+  ]
+}
