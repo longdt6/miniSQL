@@ -47,3 +47,14 @@ Volcano Model         →     Phase 2, Step 6
 Query Lifecycle       →     Phase 2 overview
 Wire Protocols        →     Phase 3 (HTTP) / Phase 5 (binary, future)
 ```
+
+## External Resources
+
+These concept docs are self-contained, but for deeper understanding:
+
+| Resource | Chapters | Covers |
+|----------|----------|--------|
+| [**Crafting Interpreters**](https://craftinginterpreters.com/contents.html) (free, Java) | 4–8 | Lexer (scanning), Parser (recursive descent, precedence), AST, expression evaluation, statements |
+| [**Database Internals**](https://www.databass.dev/) — Alex Petrov | 1–3 | Pages, slotted-page layout, B-trees, file formats, heap files |
+
+> Crafting Interpreters ch 4–8 is the blueprint for Phase 2. Every SQL engine concept (lexer.md, parser.md, binder.md) builds on techniques from those chapters.

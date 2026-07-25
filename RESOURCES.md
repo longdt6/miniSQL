@@ -13,7 +13,19 @@ The single best book for this project. It covers exactly what we're building:
 
 > Start with chapters 1–5 (storage engine).
 
-### 2. Designing Data-Intensive Applications — Martin Kleppmann (2017)
+### 2. Crafting Interpreters — Robert Nystrom (free online)
+A complete guide to building a programming language interpreter in Java. This is the single best resource for Phase 2 (SQL engine). SQL is a language, and a SQL engine is its interpreter. Every technique maps directly:
+- **Ch 4: Scanning** → Lexer (tokenizing SQL: keywords, identifiers, literals, operators)
+- **Ch 5: Representing Code** → AST nodes (SelectStmt, InsertStmt, Expression, etc.)
+- **Ch 6: Parsing Expressions** → Recursive descent parsing with precedence climbing
+- **Ch 7: Evaluating Expressions** → Tree-walking expression evaluation (WHERE clause)
+- **Ch 8: Statements and State** → Parsing full statements (not just expressions)
+
+> 🔗 [craftinginterpreters.com/contents.html](https://craftinginterpreters.com/contents.html)
+>
+> Chapters 4–8 are the exact roadmap for our lexer, parser, binder, and expression evaluator.
+
+### 3. Designing Data-Intensive Applications — Martin Kleppmann (2017)
 Broader in scope but incredibly well-written. Chapters relevant to us:
 - **Ch 3: Storage and Retrieval** — hash indexes, SSTables, B-trees, OLTP vs OLAP. Explains *why* databases organize data the way they do.
 - **Ch 4: Encoding and Evolution** — how data gets serialized (Avro, Parquet, etc.). Complements our TupleSerializer.
@@ -114,8 +126,9 @@ Before Phase 1 (types + storage):
 └── cstack's tutorial Parts 1–7
 
 Before Phase 2 (lexer/parser/executor):
-├── Database Internals, Chapters 4–5
-├── CMU 15-445 Lectures 7–8
+├── **Crafting Interpreters, Chapters 4–8**  ← primary resource for SQL engine
+├── Our concept docs: lexer.md, parser.md, binder.md
+├── CMU 15-445 Lectures 7–8 (Volcano model)
 └── "Architecture of a Database System" paper
 
 Before Phase 3 (HTTP + Web UI):
