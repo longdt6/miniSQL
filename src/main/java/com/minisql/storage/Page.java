@@ -267,7 +267,7 @@ public class Page {
     // ── Disk I/O helpers (package-private, used by HeapFile) ──
 
     /** Return the raw 8192-byte array for writing to disk. */
-    byte[] getRawData() {
+    public byte[] getRawData() {
         return data;
     }
 

@@ -14,6 +14,10 @@ public class Row {
         this.values = new LinkedHashMap<>();
     }
 
+    public Row(Map<String, Object> values) {
+        this.values = new LinkedHashMap<>(values);
+    }
+
     public void set(String columnName, Object value) {
         values.put(columnName, value);
     }
@@ -52,6 +56,16 @@ public class Row {
 
     public boolean hasColumn(String name) {
         return values.containsKey(name);
+    }
+
+    /** Row as an ordered map (for serialization). */
+    public Map<String, Object> toMap() {
+        return new LinkedHashMap<>(values);
+    }
+
+    /** Column names in insertion order. */
+    public List<String> getColumnNamesAsList() {
+        return new ArrayList<>(values.keySet());
     }
 
     @Override
