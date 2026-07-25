@@ -19,9 +19,10 @@ Fundamental database internals concepts, explained before jumping into implement
 | 11 | Parser | [parser.md](parser.md) | Recursive descent parsing: grammar rules as methods, precedence, AST nodes. |
 | 12 | Binder | [binder.md](binder.md) | Semantic analysis: name resolution, type checking, star expansion. |
 | 13 | B-tree & Fanout | [btree.md](btree.md) | Why databases use B+trees — low height, high locality, lazy rebalancing. |
-| 14 | Volcano Iterator Model | [volcano-model.md](volcano-model.md) | How query execution works: `open() → next() → close()` pipeline. |
-| 15 | SQL Query Lifecycle | [query-lifecycle.md](query-lifecycle.md) | Full path: SQL string → Lexer → Parser → Binder → Planner → Executor → Result. |
-| 16 | Wire Protocols | [wire-protocols.md](wire-protocols.md) | How applications talk to databases: HTTP/JSON vs binary protocols. |
+| 14 | B+tree Operations | [btree-operations.md](btree-operations.md) | Insert with split cascade, delete with borrow/merge, range scan via leaf chain. Phase 6 core algorithms. |
+| 15 | Volcano Iterator Model | [volcano-model.md](volcano-model.md) | How query execution works: `open() → next() → close()` pipeline. |
+| 16 | SQL Query Lifecycle | [query-lifecycle.md](query-lifecycle.md) | Full path: SQL string → Lexer → Parser → Binder → Planner → Executor → Result. |
+| 17 | Wire Protocols | [wire-protocols.md](wire-protocols.md) | How applications talk to databases: HTTP/JSON vs binary protocols. |
 
 ## How This Connects to Implementation
 
@@ -41,6 +42,7 @@ Lexer                 →     Phase 2, Step 1
 Parser                →     Phase 2, Steps 2-3
 Binder                →     Phase 2, Step 4
 B-tree & Fanout       →     Phase 6 (future)
+B+tree Operations     →     Phase 6 algorithms
 Volcano Model         →     Phase 2, Step 6
 Query Lifecycle       →     Phase 2 overview
 Wire Protocols        →     Phase 3 (HTTP) / Phase 5 (binary, future)
