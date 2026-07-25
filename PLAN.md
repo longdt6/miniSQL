@@ -87,16 +87,11 @@ SQL: "SELECT name, age FROM users WHERE age > 25 ORDER BY name LIMIT 10"
 
 ## Implementation Phases
 
-**Storage engine first (complete storage before SQL):**
 | Phase | File | Status |
 |-------|------|--------|
 | **Phase 1** | [docs/phase1-storage.md](docs/phase1-storage.md) | ✅ Heap files, pages, buffer pool, catalog |
-| **Phase 6** | [docs/phase6-btree-indexes.md](docs/phase6-btree-indexes.md) | 🔜 B+tree indexes |
-| **Phase 2** | [docs/phase2-sql-engine.md](docs/phase2-sql-engine.md) | 📅 SQL engine (on top of complete storage) |
-
-**UI & polish (after engine works):**
-| Phase | File | Status |
-|-------|------|--------|
+| **Phase 6** | [docs/phase6-btree-indexes.md](docs/phase6-btree-indexes.md) | ✅ B+tree indexes |
+| **Phase 2** | [docs/phase2-sql-engine.md](docs/phase2-sql-engine.md) | ✅ SQL engine (lexer, parser, binder, planner, executor) |
 | **Phase 3** | [docs/phase3-http-server.md](docs/phase3-http-server.md) | 📅 Web UI + HTTP API |
 | **Phase 4** | [docs/phase4-integration.md](docs/phase4-integration.md) | 📅 Tests, error polish |
 | **Phase 5** | [docs/phase5-wire-protocol.md](docs/phase5-wire-protocol.md) | 📅 PostgreSQL wire protocol (skip) |
