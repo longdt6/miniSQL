@@ -15,6 +15,19 @@
             <button type="submit">Run</button>
         </form>
 
+        <details class="examples">
+            <summary>Example statements</summary>
+            <form method="post" th:action="@{/query}">
+                <button type="submit" name="sql" value="CREATE TABLE users (id INTEGER, name TEXT, age INTEGER)">Create a table</button>
+                <button type="submit" name="sql" value="INSERT INTO users VALUES (1, 'Alice', 30)">Insert a row</button>
+                <button type="submit" name="sql" value="SELECT * FROM users">Select all rows</button>
+                <button type="submit" name="sql" value="SELECT * FROM users WHERE age &gt; 25">Filter with WHERE</button>
+                <button type="submit" name="sql" value="UPDATE users SET age = 31 WHERE id = 1">Update a row</button>
+                <button type="submit" name="sql" value="DELETE FROM users WHERE id = 1">Delete a row</button>
+                <button type="submit" name="sql" value="DROP TABLE users">Drop the table</button>
+            </form>
+        </details>
+
         <div class="panels">
             <aside>
                 <h2>Tables</h2>

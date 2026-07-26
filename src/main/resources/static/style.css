@@ -55,6 +55,37 @@ form button:hover {
     background: #2563eb;
 }
 
+.examples {
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.examples summary {
+    cursor: pointer;
+    color: #374151;
+}
+
+.examples form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.examples button {
+    background: white;
+    border: 1px solid #d1d5db;
+    color: #1a1a1a;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.examples button:hover {
+    background: #f3f4f6;
+}
+
 .panels {
     display: flex;
     gap: 16px;
