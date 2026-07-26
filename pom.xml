@@ -23,10 +23,16 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Web (HTTP server, JSON, static files) -->
+        <!-- Spring Boot Web (HTTP server, static files) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf (server-rendered HTML templates) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
         <!-- Testing -->
@@ -43,7 +49,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.minisql.Phase6Demo</mainClass>
+                    <mainClass>com.minisql.MiniSqlApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>

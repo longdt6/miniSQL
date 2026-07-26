@@ -45,7 +45,7 @@ B-tree & Fanout       →     Phase 6 (future)
 B+tree Operations     →     Phase 6 algorithms
 Volcano Model         →     Phase 2, Step 6
 Query Lifecycle       →     Phase 2 overview
-Wire Protocols        →     Phase 3 (HTTP) / Phase 5 (binary, future)
+Wire Protocols        →     Phase 3 (server-rendered HTML) / Phase 5 (binary, future)
 ```
 
 ## External Resources

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>miniSQL</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <header>
+        <h1>miniSQL</h1>
+    </header>
+    <main>
+        <form method="post" th:action="@{/query}">
+            <textarea name="sql" th:text="${sql}" placeholder="SELECT * FROM users WHERE age > 25 ORDER BY name LIMIT 10" spellcheck="false"></textarea>
+            <button type="submit">Run</button>
+        </form>
+
+        <div class="panels">
+            <aside>
+                <h2>Tables</h2>
+                <ul>
+                    <li th:each="t : ${tables}" th:text="${t}"></li>
+                </ul>
+            </aside>
+
+            <section class="results">
+                <h2>Results</h2>
+
+                <div class="error" th:if="${error}" th:text="${error}"></div>
+
+                <div th:if="${columns}">
+                    <div class="status" th:text="${rows.size()} + ' row(s) in ' + ${elapsedMs} + 'ms'"></div>
+                    <table>
+                        <thead>
+                            <tr><th th:each="col : ${columns}" th:text="${col}"></th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row : ${rows}">
+                                <td th:each="col : ${columns}" th:text="${row.get(col)}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="status" th:if="${affectedRows != null}" th:text="${affectedRows} + ' row(s) affected in ' + ${elapsedMs} + 'ms'"></div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

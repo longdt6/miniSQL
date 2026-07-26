@@ -15,16 +15,14 @@ These explain **what** each component is and **why** it works that way. The phas
 ```
 ┌──────────────────────────────────────────────────────┐
 │                    Browser (Web UI)                   │
-│              HTML + CSS + vanilla JS                  │
-│              /api/query  POST {sql}                   │
+│         Server-rendered HTML (Thymeleaf)               │
+│         GET /  ·  POST /query  (form submit)          │
 └───────────────────────┬──────────────────────────────┘
                         │ HTTP
 ┌───────────────────────▼──────────────────────────────┐
 │  HTTP Server (Spring Boot + embedded Tomcat)        │
-│    GET  /                → index.html                 │
-│    POST /api/query       → SQL execution              │
-│    GET  /api/tables      → list tables                │
-│    GET  /api/tables/{n}  → describe table             │
+│    GET  /       → render form + table sidebar          │
+│    POST /query  → run SQL, render results in page      │
 └───────────────────────┬──────────────────────────────┘
                         │
 ┌───────────────────────▼──────────────────────────────┐
@@ -46,11 +44,7 @@ These explain **what** each component is and **why** it works that way. The phas
 com.minisql
 ├── MiniSqlApplication.java       // @SpringBootApplication entry point
 ├── controller/
-│   ├── QueryController.java      // POST /api/query
-│   └── TablesController.java     // GET /api/tables, /api/tables/{name}
-├── dto/
-│   ├── QueryRequest.java         // { sql: "..." }
-│   └── QueryResponse.java        // success, columns, rows, error, elapsedMs
+│   └── SqlConsoleController.java // GET /, POST /query
 ├── engine/
 │   ├── SqlEngine.java          // Facade
 │   ├── lexer/                  // Tokenizer
@@ -73,17 +67,15 @@ SQL: "SELECT name, age FROM users WHERE age > 25 ORDER BY name LIMIT 10"
 3. Binder → resolve table/columns, type-check
 4. Planner → Limit → Sort → Project → Filter → TableScan
 5. Executor → open/next/close pipeline, rows flow through operators
-6. ResultSet → JSON → HTTP response
+6. ResultSet → Thymeleaf model → rendered HTML response
 ```
 
-## REST API Design
+## Web UI Routes
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/` | Web UI |
-| `POST` | `/api/query` | Execute SQL `{"sql": "..."}` |
-| `GET` | `/api/tables` | List tables |
-| `GET` | `/api/tables/{name}` | Describe table |
+| `GET` | `/` | Render SQL form + table sidebar |
+| `POST` | `/query` | Run submitted SQL, re-render page with results |
 
 ## Implementation Phases
 
@@ -92,11 +84,12 @@ SQL: "SELECT name, age FROM users WHERE age > 25 ORDER BY name LIMIT 10"
 | **Phase 1** | [docs/phase1-storage.md](docs/phase1-storage.md) | ✅ Heap files, pages, buffer pool, catalog |
 | **Phase 6** | [docs/phase6-btree-indexes.md](docs/phase6-btree-indexes.md) | ✅ B+tree indexes |
 | **Phase 2** | [docs/phase2-sql-engine.md](docs/phase2-sql-engine.md) | ✅ SQL engine (lexer, parser, binder, planner, executor) |
-| **Phase 3** | [docs/phase3-http-server.md](docs/phase3-http-server.md) | 📅 Web UI + HTTP API |
-| **Phase 4** | [docs/phase4-integration.md](docs/phase4-integration.md) | 📅 Tests, error polish |
+| **Phase 3** | [docs/phase3-web-ui.md](docs/phase3-web-ui.md) | 📅 Web UI (Thymeleaf) |
 | **Phase 5** | [docs/phase5-wire-protocol.md](docs/phase5-wire-protocol.md) | 📅 PostgreSQL wire protocol (skip) |
 
 > **Decision [2026-07-25]**: Order is 1 → 6 → 2. Complete the full storage engine (heap files + B+tree indexes) first, then build the SQL engine. Understanding how data is physically stored, indexed, and searched makes the SQL layer much clearer.
+>
+> **Decision [2026-07-26]**: Web UI moved from REST API + vanilla JS to server-rendered Thymeleaf, and merged with the former Phase 4 (integration/polish) into a single Phase 3. Error handling polish, `SHOW TABLES`/`DESCRIBE` SQL commands, and other Phase 4 extras are dropped from scope for now — see [docs/phase3-web-ui.md](docs/phase3-web-ui.md) for details.
 
 ## Key Design Decisions
 
@@ -104,7 +97,7 @@ SQL: "SELECT name, age FROM users WHERE age > 25 ORDER BY name LIMIT 10"
 2. **Hand-written parser** — more educational than ANTLR, you see every token and production rule.
 3. **Volcano iterator model** — `open() → next() → close()` pipeline. Classic database execution model.
 4. **Slotted-page storage** — 8KB pages, slot directory + tuple data growing from opposite ends. Same layout as PostgreSQL.
-5. **Spring Boot + Jackson** — HTTP layer is just transport plumbing. Spring Boot handles routing, JSON, static files, threading. Focus remains on the SQL engine. Database internals are pure Java; only the HTTP wrapper uses a framework.
+5. **Spring Boot + Thymeleaf** — HTTP layer is just transport plumbing. Spring Boot handles routing, static files, threading; Thymeleaf renders HTML server-side directly from `ResultSet`/`Catalog`, no separate JSON/DTO layer. Focus remains on the SQL engine. Database internals are pure Java; only the HTTP wrapper uses a framework.
 6. **Buffer pool with LRU eviction** — caches hot pages in memory, evicts cold pages.
 7. **Catalog as JSON** — schema metadata in `data/<db>/catalog.json`. Simple to inspect and debug.
 
@@ -112,8 +105,7 @@ SQL: "SELECT name, age FROM users WHERE age > 25 ORDER BY name LIMIT 10"
 
 ```bash
 java -jar target/minisql.jar                         # Start server
-curl -X POST localhost:8080/api/query \
-  -d '{"sql":"SELECT 1"}'                            # HTTP query test
+open http://localhost:8080                           # Web UI query test
 ```
 
 ```sql
