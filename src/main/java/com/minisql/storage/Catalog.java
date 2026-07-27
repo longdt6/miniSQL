@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minisql.common.SqlException;
 import com.minisql.types.DataType;
 import com.minisql.types.TextType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Catalog {
 
+    private static final Logger log = LoggerFactory.getLogger(Catalog.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Path basePath;
@@ -133,12 +136,12 @@ public class Catalog {
                     try {
                         type = DataType.fromSqlName(c.type());
                     } catch (IllegalArgumentException e) {
-                        System.err.println("WARNING: Unknown type '" + c.type() + "' for column '" + c.name() + "', defaulting to TEXT");
+                        log.warn("Unknown type '{}' for column '{}', defaulting to TEXT", c.type(), c.name());
                         type = TextType.INSTANCE;
                     }
                     columns.add(new ColumnMetadata(c.name(), type, c.position()));
                 }
-                columns.sort(Comparator.comparingInt(ColumnMetadata::getPosition));
+                columns.sort(Comparator.comparingInt(ColumnMetadata::position));
 
                 TableMetadata meta = new TableMetadata(t.id(), t.name(), t.heapFile(), columns);
                 tables.put(t.name().toLowerCase(), meta);
@@ -147,7 +150,7 @@ public class Catalog {
             nextTableId.set(maxId + 1);
 
         } catch (IOException e) {
-            System.err.println("WARNING: Could not load catalog: " + e.getMessage());
+            log.warn("Could not load catalog: {}", e.getMessage());
         }
     }
 
@@ -158,15 +161,15 @@ public class Catalog {
             List<TableJson> tableJsons = new ArrayList<>();
             for (TableMetadata meta : tables.values()) {
                 List<ColumnJson> columnJsons = new ArrayList<>();
-                for (ColumnMetadata c : meta.getColumns()) {
-                    columnJsons.add(new ColumnJson(c.getName(), c.getDataType().getSqlName(), c.getPosition()));
+                for (ColumnMetadata c : meta.columns()) {
+                    columnJsons.add(new ColumnJson(c.name(), c.dataType().getSqlName(), c.position()));
                 }
-                tableJsons.add(new TableJson(meta.getTableId(), meta.getTableName(), meta.getHeapFilePath(), columnJsons));
+                tableJsons.add(new TableJson(meta.tableId(), meta.tableName(), meta.heapFilePath(), columnJsons));
             }
 
             MAPPER.writerWithDefaultPrettyPrinter().writeValue(catalogFile.toFile(), new CatalogFile(tableJsons));
         } catch (IOException e) {
-            System.err.println("ERROR: Could not save catalog: " + e.getMessage());
+            log.error("Could not save catalog: {}", e.getMessage());
         }
     }
 

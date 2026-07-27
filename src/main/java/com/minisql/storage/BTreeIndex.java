@@ -1,5 +1,8 @@
 package com.minisql.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,6 +17,8 @@ import java.util.List;
  * becomes the new root.
  */
 public class BTreeIndex {
+
+    private static final Logger log = LoggerFactory.getLogger(BTreeIndex.class);
 
     private final IndexFile indexFile;
     private final BufferPool pool;
@@ -357,13 +362,13 @@ public class BTreeIndex {
 
     public void printTree() throws IOException {
         IndexPage root = readPage(0);
-        if (root == null) { System.out.println("(empty tree)"); return; }
+        if (root == null) { log.info("(empty tree)"); return; }
         printNode(root, 0);
     }
 
     private void printNode(IndexPage node, int indent) throws IOException {
         String prefix = "  ".repeat(indent);
-        System.out.println(prefix + node);
+        log.info("{}{}", prefix, node);
         if (node.isInternal()) {
             for (int i = 0; i <= node.getNumKeys(); i++) {
                 printNode(readPage(node.getInternalChild(i)), indent + 1);

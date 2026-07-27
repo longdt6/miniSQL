@@ -37,10 +37,10 @@ class CatalogTest {
         Catalog catalog = new Catalog(dir.toString());
 
         TableMetadata table = catalog.getTable("users");
-        assertThat(table.getTableId()).isEqualTo(1);
-        assertThat(table.getHeapFilePath()).isEqualTo("data/mydb/users.dat");
-        assertThat(table.getColumns()).extracting("name").containsExactly("id", "name", "age");
-        assertThat(table.getColumn("age").orElseThrow().getDataType()).isEqualTo(IntegerType.INSTANCE);
+        assertThat(table.tableId()).isEqualTo(1);
+        assertThat(table.heapFilePath()).isEqualTo("data/mydb/users.dat");
+        assertThat(table.columns()).extracting("name").containsExactly("id", "name", "age");
+        assertThat(table.column("age").orElseThrow().dataType()).isEqualTo(IntegerType.INSTANCE);
     }
 
     @Test
@@ -53,7 +53,7 @@ class CatalogTest {
 
         Catalog reloaded = new Catalog(dir.toString());
         TableMetadata table = reloaded.getTable("people");
-        assertThat(table.getColumns()).extracting("name").containsExactly("id", "name");
+        assertThat(table.columns()).extracting("name").containsExactly("id", "name");
         assertThat(reloaded.getTableNames()).containsExactly("people");
     }
 }

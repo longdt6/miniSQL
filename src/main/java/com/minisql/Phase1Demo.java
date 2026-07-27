@@ -35,8 +35,8 @@ public class Phase1Demo {
         // ── INSERT rows ────────────────────────────────────────
         System.out.println("\n3. Inserting 3 rows...");
         HeapFile hf = new HeapFile(
-            java.nio.file.Paths.get(users.getHeapFilePath()),
-            users.getTableName()
+            java.nio.file.Paths.get(users.heapFilePath()),
+            users.tableName()
         );
         TupleDesc desc = TupleDesc.fromTable(users);
 
@@ -62,7 +62,7 @@ public class Phase1Demo {
 
         // ── Verify pages on disk ───────────────────────────────
         System.out.println("\n5. Disk inspection:");
-        hf = new HeapFile(java.nio.file.Paths.get(users.getHeapFilePath()), users.getTableName());
+        hf = new HeapFile(java.nio.file.Paths.get(users.heapFilePath()), users.tableName());
         int numPages = hf.getNumPages();
         System.out.println("   " + hf);
         for (int p = 0; p < numPages; p++) {

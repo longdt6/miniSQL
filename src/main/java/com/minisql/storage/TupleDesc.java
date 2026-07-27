@@ -19,7 +19,7 @@ public class TupleDesc {
 
     /** Create a TupleDesc from a TableMetadata snapshot. */
     public static TupleDesc fromTable(TableMetadata table) {
-        return new TupleDesc(table.getColumns());
+        return new TupleDesc(table.columns());
     }
 
     public List<ColumnMetadata> getColumns() {
@@ -35,11 +35,11 @@ public class TupleDesc {
     }
 
     public DataType getColumnType(int position) {
-        return columns.get(position).getDataType();
+        return columns.get(position).dataType();
     }
 
     public String getColumnName(int position) {
-        return columns.get(position).getName();
+        return columns.get(position).name();
     }
 
     @Override

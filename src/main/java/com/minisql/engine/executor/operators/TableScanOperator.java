@@ -24,7 +24,7 @@ public class TableScanOperator implements Operator {
 
     @Override
     public void open() {
-        hf = new HeapFile(Paths.get(table.getHeapFilePath()), table.getTableName());
+        hf = new HeapFile(Paths.get(table.heapFilePath()), table.tableName());
         desc = TupleDesc.fromTable(table);
         iterator = hf.tupleIterator();
     }

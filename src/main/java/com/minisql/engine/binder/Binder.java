@@ -50,17 +50,17 @@ public class Binder {
         if (stmt.columns().size() == 1 && stmt.columns().get(0).isStar()) {
             // SELECT *
             selectColumns = new ArrayList<>();
-            for (ColumnMetadata col : table.getColumns()) {
-                selectColumns.add(new BoundColumn(col.getName(), col.getDataType(), col.getPosition()));
+            for (ColumnMetadata col : table.columns()) {
+                selectColumns.add(new BoundColumn(col.name(), col.dataType(), col.position()));
             }
         } else {
             selectColumns = new ArrayList<>();
             for (Statement.SelectColumn sc : stmt.columns()) {
                 if (sc.expression() instanceof Expression.ColumnRef cr) {
-                    ColumnMetadata col = table.getColumn(cr.name())
+                    ColumnMetadata col = table.column(cr.name())
                         .orElseThrow(() -> new SqlException(
-                            "Column '" + cr.name() + "' not found in table '" + table.getTableName() + "'"));
-                    selectColumns.add(new BoundColumn(col.getName(), col.getDataType(), col.getPosition()));
+                            "Column '" + cr.name() + "' not found in table '" + table.tableName() + "'"));
+                    selectColumns.add(new BoundColumn(col.name(), col.dataType(), col.position()));
                 } else if (sc.expression() instanceof Expression.Literal lit) {
                     DataType type = tokenValueToType(lit.value());
                     selectColumns.add(new BoundColumn(lit.value().toString(), type, -1));
@@ -78,7 +78,7 @@ public class Binder {
 
         // Verify ORDER BY columns
         for (Statement.OrderBy ob : stmt.orderBy()) {
-            table.getColumn(ob.columnName())
+            table.column(ob.columnName())
                 .orElseThrow(() -> new SqlException(
                     "Column '" + ob.columnName() + "' not found in ORDER BY"));
         }
@@ -94,19 +94,19 @@ public class Binder {
 
         // If no column list specified, use all columns
         List<String> columnNames = stmt.columns().isEmpty()
-            ? table.getColumns().stream().map(ColumnMetadata::getName).toList()
+            ? table.columns().stream().map(ColumnMetadata::name).toList()
             : stmt.columns();
 
         // Validate columns exist
         List<ColumnMetadata> colTypes = new ArrayList<>();
         for (String colName : columnNames) {
-            ColumnMetadata col = table.getColumn(colName)
+            ColumnMetadata col = table.column(colName)
                 .orElseThrow(() -> new SqlException(
-                    "Column '" + colName + "' not found in table '" + table.getTableName() + "'"));
+                    "Column '" + colName + "' not found in table '" + table.tableName() + "'"));
             colTypes.add(col);
         }
 
-        if (colTypes.size() != table.getColumnCount() && !stmt.columns().isEmpty()) {
+        if (colTypes.size() != table.columnCount() && !stmt.columns().isEmpty()) {
             // Partial insert — columns not specified will be NULL
         }
 
@@ -122,7 +122,7 @@ public class Binder {
 
             List<Object> boundRow = new ArrayList<>();
             for (int ci = 0; ci < row.size(); ci++) {
-                Object value = evaluateLiteral(row.get(ci), colTypes.get(ci).getDataType());
+                Object value = evaluateLiteral(row.get(ci), colTypes.get(ci).dataType());
                 boundRow.add(value);
             }
             boundRows.add(boundRow);
@@ -138,10 +138,10 @@ public class Binder {
 
         List<BoundStatement.UpdateSet> sets = new ArrayList<>();
         for (Statement.UpdateSet us : stmt.setClauses()) {
-            ColumnMetadata col = table.getColumn(us.columnName())
+            ColumnMetadata col = table.column(us.columnName())
                 .orElseThrow(() -> new SqlException(
                     "Column '" + us.columnName() + "' not found"));
-            Object value = evaluateLiteral(us.value(), col.getDataType());
+            Object value = evaluateLiteral(us.value(), col.dataType());
             sets.add(new BoundStatement.UpdateSet(col, value));
         }
 
@@ -226,10 +226,10 @@ public class Binder {
         }
 
         if (expr instanceof Expression.ColumnRef cr) {
-            ColumnMetadata col = table.getColumn(cr.name())
+            ColumnMetadata col = table.column(cr.name())
                 .orElseThrow(() -> new SqlException(
-                    "Column '" + cr.name() + "' not found in table '" + table.getTableName() + "'"));
-            return BoundExpression.columnRef(col.getName(), col.getDataType(), col.getPosition());
+                    "Column '" + cr.name() + "' not found in table '" + table.tableName() + "'"));
+            return BoundExpression.columnRef(col.name(), col.dataType(), col.position());
         }
 
         if (expr instanceof Expression.Literal lit) {

@@ -1,5 +1,8 @@
 package com.minisql.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,6 +13,8 @@ import java.util.Map;
  * Shared across all tables in the database.
  */
 public class BufferPool {
+
+    private static final Logger log = LoggerFactory.getLogger(BufferPool.class);
 
     private final int maxPages;
     private final LinkedHashMap<PageId, Page> cache;
@@ -85,7 +90,7 @@ public class BufferPool {
             );
             hf.writePage(page);
         } catch (IOException e) {
-            System.err.println("WARNING: Failed to flush page " + page.getPageId() + ": " + e.getMessage());
+            log.warn("Failed to flush page {}: {}", page.getPageId(), e.getMessage());
         }
     }
 

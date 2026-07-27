@@ -79,7 +79,7 @@ public class Executor {
 
     private ResultSet executeInsert(PlanNode.Insert plan) throws SqlException {
         TableMetadata table = plan.table();
-        HeapFile hf = new HeapFile(Paths.get(table.getHeapFilePath()), table.getTableName());
+        HeapFile hf = new HeapFile(Paths.get(table.heapFilePath()), table.tableName());
         TupleDesc desc = TupleDesc.fromTable(table);
 
         int inserted = 0;
@@ -88,16 +88,16 @@ public class Executor {
                 Row row = new Row();
                 List<String> colNames = plan.columnNames();
                 if (colNames.isEmpty()) {
-                    for (int i = 0; i < table.getColumnCount(); i++) {
-                        row.set(table.getColumn(i).getName(), rowData.get(i));
+                    for (int i = 0; i < table.columnCount(); i++) {
+                        row.set(table.column(i).name(), rowData.get(i));
                     }
                 } else {
                     for (int i = 0; i < colNames.size(); i++) {
                         row.set(colNames.get(i), rowData.get(i));
                     }
-                    for (ColumnMetadata col : table.getColumns()) {
-                        if (!row.hasColumn(col.getName())) {
-                            row.set(col.getName(), null);
+                    for (ColumnMetadata col : table.columns()) {
+                        if (!row.hasColumn(col.name())) {
+                            row.set(col.name(), null);
                         }
                     }
                 }
@@ -118,7 +118,7 @@ public class Executor {
 
     private ResultSet executeUpdate(PlanNode.Update plan) throws SqlException {
         TableMetadata table = plan.table();
-        HeapFile hf = new HeapFile(Paths.get(table.getHeapFilePath()), table.getTableName());
+        HeapFile hf = new HeapFile(Paths.get(table.heapFilePath()), table.tableName());
         TupleDesc desc = TupleDesc.fromTable(table);
 
         int affected = 0;
@@ -134,7 +134,7 @@ public class Executor {
                     if (plan.where() != null && !evaluatePredicate(plan.where(), row)) continue;
 
                     for (BoundStatement.UpdateSet set : plan.setClauses()) {
-                        row.set(set.column().getName(), set.value());
+                        row.set(set.column().name(), set.value());
                     }
 
                     byte[] newTuple = TupleSerializer.serialize(row, desc);
@@ -166,7 +166,7 @@ public class Executor {
 
     private ResultSet executeDelete(PlanNode.Delete plan) throws SqlException {
         TableMetadata table = plan.table();
-        HeapFile hf = new HeapFile(Paths.get(table.getHeapFilePath()), table.getTableName());
+        HeapFile hf = new HeapFile(Paths.get(table.heapFilePath()), table.tableName());
         TupleDesc desc = TupleDesc.fromTable(table);
 
         int affected = 0;
@@ -217,10 +217,10 @@ public class Executor {
     private ResultSet executeDescribe(PlanNode.DescribeTable plan) {
         TableMetadata table = plan.table();
         List<Map<String, Object>> rows = new ArrayList<>();
-        for (ColumnMetadata col : table.getColumns()) {
+        for (ColumnMetadata col : table.columns()) {
             Map<String, Object> row = new LinkedHashMap<>();
-            row.put("column", col.getName());
-            row.put("type", col.getDataType().getSqlName());
+            row.put("column", col.name());
+            row.put("type", col.dataType().getSqlName());
             rows.add(row);
         }
         return new ResultSet(List.of("column", "type"), rows, -1);
