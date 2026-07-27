@@ -16,7 +16,7 @@ public class Lexer {
     private static final Set<String> KEYWORDS = new HashSet<>(Arrays.asList(
         "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "CREATE",
         "TABLE", "DROP", "UPDATE", "SET", "DELETE", "ORDER", "BY",
-        "ASC", "DESC", "LIMIT", "AND", "OR", "NOT", "IF", "EXISTS",
+        "ASC", "DESC", "LIMIT", "OFFSET", "AND", "OR", "NOT", "IF", "EXISTS",
         "SHOW", "DESCRIBE", "TABLES", "TRUE", "FALSE", "NULL",
         "PRIMARY", "KEY", "INDEX", "UNIQUE", "ON"
     ));
@@ -181,21 +181,16 @@ public class Lexer {
         String upper = word.toUpperCase();
 
         if (KEYWORDS.contains(upper)) {
-            TokenType kwType = TokenType.valueOf(upper);
-            // Special case: DESC is ambiguous (DESC for ORDER BY vs DESCRIBE alias)
-            if (kwType == TokenType.DESC && peekKeyword("DESCRIBE", word)) {
-                // Handled in parser by context, treat as keyword DESC for now
-            }
+            TokenType kwType = switch (upper) {
+                case "TRUE" -> TokenType.TRUE_KW;
+                case "FALSE" -> TokenType.FALSE_KW;
+                case "NULL" -> TokenType.NULL_KW;
+                default -> TokenType.valueOf(upper);
+            };
             return Token.keyword(kwType, line, startCol);
         }
 
         return Token.identifier(word, line, startCol);
-    }
-
-    private boolean peekKeyword(String keyword, String current) {
-        // Simple heuristic: if current word is "DESC" and it was lower/mixed case
-        // and not followed by a column context, treat as DESCRIBE alias
-        return false; // parser handles disambiguation
     }
 
     // ── Helpers ────────────────────────────────────────────────────

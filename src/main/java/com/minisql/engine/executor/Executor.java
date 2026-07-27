@@ -194,6 +194,10 @@ public class Executor {
     }
 
     private ResultSet executeCreateTable(PlanNode.CreateTable plan) throws SqlException {
+        // Empty columns is the Binder's signal for "IF NOT EXISTS and table already exists": no-op.
+        if (plan.columns().isEmpty()) {
+            return new ResultSet(List.of(), List.of(), 0);
+        }
         catalog.createTable(plan.tableName(), plan.columns());
         return new ResultSet(List.of(), List.of(), 0);
     }

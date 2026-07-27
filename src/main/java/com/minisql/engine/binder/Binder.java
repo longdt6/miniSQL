@@ -250,7 +250,13 @@ public class Binder {
             // Coerce to target type
             if (targetType instanceof IntegerType) {
                 if (value instanceof Integer i) return i;
-                if (value instanceof String s) return Integer.parseInt(s);
+                if (value instanceof String s) {
+                    try {
+                        return Integer.parseInt(s);
+                    } catch (NumberFormatException e) {
+                        throw new SqlException("Expected INTEGER, got '" + s + "'");
+                    }
+                }
                 throw new SqlException("Expected INTEGER, got " + value.getClass().getSimpleName());
             }
             if (targetType instanceof FloatType) {
