@@ -1,7 +1,9 @@
 package com.minisql.storage;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minisql.common.SqlException;
 import com.minisql.types.DataType;
+import com.minisql.types.TextType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,16 +11,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The database catalog — tracks what tables exist, their schemas, and heap file locations.
  * Persisted as JSON at startup/shutdown and on every DDL change.
- *
- * We use simple regex-based JSON parsing to avoid external dependencies.
  */
 public class Catalog {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Path basePath;
     private final Path catalogFile;
@@ -121,29 +121,27 @@ public class Catalog {
         }
 
         try {
-            String json = Files.readString(catalogFile);
-
-            // Simple regex-based JSON parsing for our known schema
-            // Match each table object: { "id": N, "name": "...", "heapFile": "...", "columns": [...] }
-            Pattern tablePattern = Pattern.compile(
-                "\\{\\s*\"id\"\\s*:\\s*(\\d+),\\s*\"name\"\\s*:\\s*\"([^\"]+)\",\\s*\"heapFile\"\\s*:\\s*\"([^\"]+)\",\\s*\"columns\"\\s*:\\s*\\[(.*?)\\]\\s*\\}",
-                Pattern.DOTALL
-            );
-
-            Matcher m = tablePattern.matcher(json);
+            CatalogFile file = MAPPER.readValue(catalogFile.toFile(), CatalogFile.class);
             int maxId = 0;
 
-            while (m.find()) {
-                int id = Integer.parseInt(m.group(1));
-                String name = m.group(2);
-                String heapFile = m.group(3);
-                String columnsJson = m.group(4);
+            for (TableJson t : file.tables()) {
+                if (t.id() > maxId) maxId = t.id();
 
-                if (id > maxId) maxId = id;
+                List<ColumnMetadata> columns = new ArrayList<>();
+                for (ColumnJson c : t.columns()) {
+                    DataType type;
+                    try {
+                        type = DataType.fromSqlName(c.type());
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("WARNING: Unknown type '" + c.type() + "' for column '" + c.name() + "', defaulting to TEXT");
+                        type = TextType.INSTANCE;
+                    }
+                    columns.add(new ColumnMetadata(c.name(), type, c.position()));
+                }
+                columns.sort(Comparator.comparingInt(ColumnMetadata::getPosition));
 
-                List<ColumnMetadata> columns = parseColumns(columnsJson);
-                TableMetadata meta = new TableMetadata(id, name, heapFile, columns);
-                tables.put(name.toLowerCase(), meta);
+                TableMetadata meta = new TableMetadata(t.id(), t.name(), t.heapFile(), columns);
+                tables.put(t.name().toLowerCase(), meta);
             }
 
             nextTableId.set(maxId + 1);
@@ -153,74 +151,23 @@ public class Catalog {
         }
     }
 
-    private List<ColumnMetadata> parseColumns(String columnsJson) {
-        List<ColumnMetadata> columns = new ArrayList<>();
-        Pattern colPattern = Pattern.compile(
-            "\"name\"\\s*:\\s*\"([^\"]+)\",\\s*\"type\"\\s*:\\s*\"([^\"]+)\",\\s*\"position\"\\s*:\\s*(\\d+)"
-        );
-
-        Matcher m = colPattern.matcher(columnsJson);
-        while (m.find()) {
-            String colName = m.group(1);
-            String typeName = m.group(2);
-            int position = Integer.parseInt(m.group(3));
-
-            DataType type;
-            try {
-                type = DataType.fromSqlName(typeName);
-            } catch (IllegalArgumentException e) {
-                System.err.println("WARNING: Unknown type '" + typeName + "' for column '" + colName + "', defaulting to TEXT");
-                type = com.minisql.types.TextType.INSTANCE;
-            }
-
-            columns.add(new ColumnMetadata(colName, type, position));
-        }
-
-        // Sort by position to ensure correct order
-        columns.sort(Comparator.comparingInt(ColumnMetadata::getPosition));
-        return columns;
-    }
-
     public synchronized void save() {
         try {
             Files.createDirectories(basePath);
-            StringBuilder sb = new StringBuilder();
-            sb.append("{\n  \"tables\": [\n");
-            boolean first = true;
 
+            List<TableJson> tableJsons = new ArrayList<>();
             for (TableMetadata meta : tables.values()) {
-                if (!first) sb.append(",\n");
-                first = false;
-
-                sb.append("    {\n");
-                sb.append("      \"id\": ").append(meta.getTableId()).append(",\n");
-                sb.append("      \"name\": \"").append(escapeJson(meta.getTableName())).append("\",\n");
-                sb.append("      \"heapFile\": \"").append(escapeJson(meta.getHeapFilePath())).append("\",\n");
-                sb.append("      \"columns\": [\n");
-
-                List<ColumnMetadata> cols = meta.getColumns();
-                for (int i = 0; i < cols.size(); i++) {
-                    ColumnMetadata c = cols.get(i);
-                    sb.append("        {\"name\": \"").append(escapeJson(c.getName()))
-                      .append("\", \"type\": \"").append(c.getDataType().getSqlName())
-                      .append("\", \"position\": ").append(c.getPosition()).append("}");
-                    if (i < cols.size() - 1) sb.append(",");
-                    sb.append("\n");
+                List<ColumnJson> columnJsons = new ArrayList<>();
+                for (ColumnMetadata c : meta.getColumns()) {
+                    columnJsons.add(new ColumnJson(c.getName(), c.getDataType().getSqlName(), c.getPosition()));
                 }
-
-                sb.append("      ]\n");
-                sb.append("    }");
+                tableJsons.add(new TableJson(meta.getTableId(), meta.getTableName(), meta.getHeapFilePath(), columnJsons));
             }
 
-            sb.append("\n  ]\n}\n");
-            Files.writeString(catalogFile, sb.toString());
+            MAPPER.writerWithDefaultPrettyPrinter().writeValue(catalogFile.toFile(), new CatalogFile(tableJsons));
         } catch (IOException e) {
             System.err.println("ERROR: Could not save catalog: " + e.getMessage());
         }
-    }
-
-    private static String escapeJson(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     // ── Shutdown ───────────────────────────────────────────────
@@ -238,4 +185,12 @@ public class Catalog {
      * Simple record for column definition before table creation.
      */
     public record ColumnDef(String name, DataType dataType) {}
+
+    // ── JSON DTOs (Jackson-serialized on-disk format) ───────────
+
+    private record CatalogFile(List<TableJson> tables) {}
+
+    private record TableJson(int id, String name, String heapFile, List<ColumnJson> columns) {}
+
+    private record ColumnJson(String name, String type, int position) {}
 }
